@@ -1,0 +1,44 @@
+{
+	"files": [
+		{
+			"path": "app/src/ui/changes/filter-changes-list.tsx",
+			"bookmarks": [
+				{
+					"line": 829,
+					"column": 0,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "app/src/ui/changes/commit-message.tsx",
+			"bookmarks": [
+				{
+					"line": 1539,
+					"column": 0,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "app/src/ui/history/compare.tsx",
+			"bookmarks": [
+				{
+					"line": 167,
+					"column": 0,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "app/src/ui/changes/commit-message-emoji.tsx",
+			"bookmarks": [
+				{
+					"line": 168,
+					"column": 0,
+					"label": ""
+				}
+			]
+		}
+	]
+}

@@ -69,6 +69,7 @@ import {
 import { AriaLiveContainer } from '../accessibility/aria-live-container'
 import { HookProgress } from '../../lib/git'
 import { assertNever } from '../../lib/fatal-error'
+import { CommitMessageEmoji } from './commit-message-emoji'
 
 const addAuthorIcon: OcticonSymbolVariant = {
   w: 18,
@@ -770,6 +771,12 @@ export class CommitMessage extends React.Component<
         repository={repository}
         accounts={this.props.accounts}
       />
+    )
+  }
+
+  private renderEmojiButton() {
+    return (
+      <CommitMessageEmoji/>
     )
   }
 
@@ -1706,7 +1713,7 @@ export class CommitMessage extends React.Component<
       >
         <div className={summaryClassName} ref={this.summaryGroupRef}>
           {this.renderAvatar()}
-
+          {this.renderEmojiButton()}
           <AutocompletingInput
             required={true}
             label={this.props.showInputLabels === true ? 'Summary' : undefined}
