@@ -798,7 +798,10 @@ export class CommitMessage extends React.Component<
 
   private renderEmojiButton() {
     return (
-      <CommitMessageEmoji/>
+      <CommitMessageEmoji
+        commitValue={this.state.commitMessage.summary}
+        commitValueChanged={this.onSummaryChanged}
+      />
     )
   }
 

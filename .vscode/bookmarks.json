@@ -14,7 +14,7 @@
 			"path": "app/src/ui/changes/commit-message.tsx",
 			"bookmarks": [
 				{
-					"line": 1539,
+					"line": 1542,
 					"column": 0,
 					"label": ""
 				}
@@ -25,16 +25,6 @@
 			"bookmarks": [
 				{
 					"line": 167,
-					"column": 0,
-					"label": ""
-				}
-			]
-		},
-		{
-			"path": "app/src/ui/changes/commit-message-emoji.tsx",
-			"bookmarks": [
-				{
-					"line": 168,
 					"column": 0,
 					"label": ""
 				}
