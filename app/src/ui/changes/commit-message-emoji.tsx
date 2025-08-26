@@ -37,6 +37,8 @@ interface ICommitMessageEmojiState {
 }
 
 interface ICommitMessageEmojiProps {
+  readonly commitValue?: string
+  readonly commitValueChanged: (value: string) => void
   // /** The user whose avatar should be displayed. */
   // readonly user?: IAvatarUser
 
@@ -389,7 +391,12 @@ export class CommitMessageEmoji extends React.Component<
 
   private onEmojiRowClick = (indexPath: RowIndexPath) => {
     const emojiItem = this.state.emojiData[indexPath.row]
-    console.log(`Selected emoji: ${emojiItem.emoji} ${emojiItem.code}`)
+    
+    // Extract the category name from the description (e.g., "[FEATURE]" from "[FEATURE] - New feature implementation")
+    const categoryMatch = emojiItem.description.match(/\[([^\]]+)\]/)
+    const categoryName = categoryMatch ? `[${categoryMatch[1]}]` : emojiItem.code
+
+    this.props.commitValueChanged(`${emojiItem.emoji} ${categoryName} ${this.props.commitValue}`)
     // Here you could emit the selected emoji to parent component
     this.closePopover()
   }
