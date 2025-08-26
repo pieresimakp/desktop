@@ -63,6 +63,7 @@ import { useRepoRulesLogic } from '../../lib/helpers/repo-rules'
 import { isDotCom } from '../../lib/endpoint-capabilities'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { enableCommitMessageGeneration } from '../../lib/feature-flag'
+import { CommitMessageEmoji } from './commit-message-emoji'
 
 const addAuthorIcon: OcticonSymbolVariant = {
   w: 18,
@@ -744,6 +745,12 @@ export class CommitMessage extends React.Component<
         repository={repository}
         accounts={this.props.accounts}
       />
+    )
+  }
+
+  private renderEmojiButton() {
+    return (
+      <CommitMessageEmoji/>
     )
   }
 
@@ -1530,7 +1537,7 @@ export class CommitMessage extends React.Component<
       >
         <div className={summaryClassName} ref={this.summaryGroupRef}>
           {this.renderAvatar()}
-
+          {this.renderEmojiButton()}
           <AutocompletingInput
             required={true}
             label={this.props.showInputLabels === true ? 'Summary' : undefined}
