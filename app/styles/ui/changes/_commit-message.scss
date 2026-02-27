@@ -152,7 +152,7 @@
 
     .my-task-header-row {
       display: grid;
-      grid-template-columns: 110px 120px 1fr;
+      grid-template-columns: 110px 120px 1fr 18px;
       gap: var(--spacing-half);
       font-weight: var(--font-weight-semibold);
       color: var(--text-secondary-color);
@@ -175,7 +175,7 @@
 
     .my-task-row {
       display: grid;
-      grid-template-columns: 110px 120px 1fr;
+      grid-template-columns: 110px 120px 1fr 18px;
       gap: var(--spacing-half);
       align-items: baseline;
       padding: 4px 6px;
@@ -201,10 +201,26 @@
     }
 
     .my-task-description {
-      max-width: 260px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .my-task-link {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      justify-self: start;
+      min-width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary-color);
+
+      &:hover {
+        color: var(--text-color);
+      }
     }
 
     .my-task-status {
