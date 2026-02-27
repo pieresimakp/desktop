@@ -9,6 +9,7 @@ import { TabBar } from '../tab-bar'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { Select } from '../lib/select'
 import { TextBox } from '../lib/text-box'
+import { itdpmEndpointPlaceholder } from '../../lib/itdpm'
 import {
   shellFriendlyNames,
   SupportedHooksEnvShell,
@@ -41,6 +42,8 @@ interface IGitProps {
 
   readonly itdpmCookie: string
   readonly onItdpmCookieChanged: (cookie: string) => void
+  readonly itdpmEndpoint: string
+  readonly onItdpmEndpointChanged: (endpoint: string) => void
 }
 
 const windowsShells: ReadonlyArray<SupportedHooksEnvShell> = [
@@ -79,6 +82,10 @@ export class Git extends React.Component<IGitProps> {
 
   private onItdpmCookieChanged = (value: string) => {
     this.props.onItdpmCookieChanged(value)
+  }
+
+  private onItdpmEndpointChanged = (value: string) => {
+    this.props.onItdpmEndpointChanged(value)
   }
 
   private renderHooksSettings() {
@@ -186,13 +193,18 @@ export class Git extends React.Component<IGitProps> {
   private renderItdpmSettings() {
     return (
       <div className="itdpm-settings">
-        <h2 id="itdpm-cookie-heading">ITDPM cookie</h2>
+        <h2 id="itdpm-settings-heading">ITDPM</h2>
+        <TextBox
+          label="Endpoint"
+          value={this.props.itdpmEndpoint}
+          onValueChanged={this.onItdpmEndpointChanged}
+          placeholder={itdpmEndpointPlaceholder}
+        />
         <TextBox
           label="Cookie"
           value={this.props.itdpmCookie}
           onValueChanged={this.onItdpmCookieChanged}
           placeholder="Paste cookie value here"
-          ariaLabelledBy="itdpm-cookie-heading"
         />
         <p className="git-settings-description">
           Used to load tasks for the My task list in the commit panel.

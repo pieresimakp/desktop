@@ -1,15 +1,12 @@
 import { net } from 'electron'
-import {
-  myTaskEndpoint,
-  myTaskRequestBody,
-  IMyTaskApiResponse,
-} from '../lib/itdpm'
+import { myTaskRequestBody, IMyTaskApiResponse } from '../lib/itdpm'
 
 export async function fetchItdpmTasks(
+  endpoint: string,
   cookie: string | null
 ): Promise<IMyTaskApiResponse> {
   return new Promise((resolve, reject) => {
-    const request = net.request({ method: 'POST', url: myTaskEndpoint })
+    const request = net.request({ method: 'POST', url: endpoint })
 
     request.setHeader('Accept', 'application/json')
     request.setHeader('Content-Type', 'application/json')

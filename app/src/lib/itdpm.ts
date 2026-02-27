@@ -1,6 +1,6 @@
 export const itdpmCookieStorageKey = 'itdpm-cookie'
-
-export const myTaskEndpoint = 'https://itdpm.rpx.co.id/web/dataset/search_read'
+export const itdpmEndpointStorageKey = 'itdpm-endpoint'
+export const itdpmEndpointPlaceholder = 'https://example.com'
 
 export const myTaskRequestBody = {
   id: 16,

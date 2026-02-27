@@ -724,8 +724,8 @@ app.on('ready', () => {
     requestNotificationsPermission()
   )
 
-  ipcMain.handle('fetch-itdpm-tasks', async (_, cookie) =>
-    fetchItdpmTasks(cookie)
+  ipcMain.handle('fetch-itdpm-tasks', async (_, endpoint, cookie) =>
+    fetchItdpmTasks(endpoint, cookie)
   )
 })
 

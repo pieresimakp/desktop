@@ -70,7 +70,11 @@ import { AriaLiveContainer } from '../accessibility/aria-live-container'
 import { HookProgress } from '../../lib/git'
 import { assertNever } from '../../lib/fatal-error'
 import { CommitMessageEmoji } from './commit-message-emoji'
-import { itdpmCookieStorageKey, IMyTaskApiResponse } from '../../lib/itdpm'
+import {
+  itdpmCookieStorageKey,
+  itdpmEndpointStorageKey,
+  IMyTaskApiResponse,
+} from '../../lib/itdpm'
 import { fetchItdpmTasks, openExternal } from '../main-process-proxy'
 
 const addAuthorIcon: OcticonSymbolVariant = {
@@ -1216,6 +1220,16 @@ export class CommitMessage extends React.Component<
     this.setState({ isMyTaskLoading: true, myTaskLoadError: null })
 
     try {
+      const endpoint = localStorage.getItem(itdpmEndpointStorageKey)
+      if (!endpoint || endpoint.trim().length === 0) {
+        this.setState({
+          myTaskLoadError:
+            'Set the ITDPM endpoint in Preferences → Git → ITDPM.',
+          isMyTaskLoading: false,
+        })
+        return
+      }
+
       const cookie = localStorage.getItem(itdpmCookieStorageKey)
       if (!cookie || cookie.trim().length === 0) {
         this.setState({
@@ -1226,6 +1240,7 @@ export class CommitMessage extends React.Component<
         return
       }
       const data = (await fetchItdpmTasks(
+        endpoint,
         cookie.trim().length > 0 ? cookie : null
       )) as IMyTaskApiResponse
       const records = data.result?.records ?? []
