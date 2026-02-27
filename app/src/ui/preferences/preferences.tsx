@@ -57,6 +57,7 @@ import {
   setGitHookEnvShell,
   setHooksEnvEnabled,
 } from '../../lib/hooks/config'
+import { itdpmCookieStorageKey } from '../../lib/itdpm'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -151,6 +152,7 @@ interface IPreferencesState {
   readonly selectedGitHookEnvShell: string | undefined
   // Whether the preferences related to Git hooks environment have been changed
   readonly hooksPreferencesDirty: boolean
+  readonly itdpmCookie: string
 }
 
 /**
@@ -213,6 +215,7 @@ export class Preferences extends React.Component<
       cacheGitHookEnv: getCacheHooksEnv(),
       selectedGitHookEnvShell: getGitHookEnvShell(),
       hooksPreferencesDirty: false,
+      itdpmCookie: localStorage.getItem(itdpmCookieStorageKey) ?? '',
     }
   }
 
@@ -500,6 +503,8 @@ export class Preferences extends React.Component<
               selectedShell={
                 this.state.selectedGitHookEnvShell ?? defaultGitHookEnvShell
               }
+              itdpmCookie={this.state.itdpmCookie}
+              onItdpmCookieChanged={this.onItdpmCookieChanged}
             />
           </>
         )
@@ -636,6 +641,16 @@ export class Preferences extends React.Component<
     showCommitLengthWarning: boolean
   ) => {
     this.setState({ showCommitLengthWarning })
+  }
+
+  private onItdpmCookieChanged = (cookie: string) => {
+    this.setState({ itdpmCookie: cookie })
+
+    if (cookie.trim().length === 0) {
+      localStorage.removeItem(itdpmCookieStorageKey)
+    } else {
+      localStorage.setItem(itdpmCookieStorageKey, cookie)
+    }
   }
 
   private onNotificationsEnabledChanged = (notificationsEnabled: boolean) => {

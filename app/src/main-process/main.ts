@@ -37,6 +37,7 @@ import { installAuthenticatedImageFilter } from './authenticated-image-filter'
 import { installAliveOriginFilter } from './alive-origin-filter'
 import { installSameOriginFilter } from './same-origin-filter'
 import * as ipcMain from './ipc-main'
+import { fetchItdpmTasks } from './itdpm'
 import {
   getArchitecture,
   isAppRunningUnderARM64Translation,
@@ -721,6 +722,10 @@ app.on('ready', () => {
   )
   ipcMain.handle('request-notifications-permission', async () =>
     requestNotificationsPermission()
+  )
+
+  ipcMain.handle('fetch-itdpm-tasks', async (_, cookie) =>
+    fetchItdpmTasks(cookie)
   )
 })
 
