@@ -70,6 +70,8 @@ import { AriaLiveContainer } from '../accessibility/aria-live-container'
 import { HookProgress } from '../../lib/git'
 import { assertNever } from '../../lib/fatal-error'
 import { CommitMessageEmoji } from './commit-message-emoji'
+import { itdpmCookieStorageKey, IMyTaskApiResponse } from '../../lib/itdpm'
+import { fetchItdpmTasks } from '../main-process-proxy'
 
 const addAuthorIcon: OcticonSymbolVariant = {
   w: 18,
@@ -242,10 +244,21 @@ interface ICommitMessageState {
   readonly repoRulesEnabled: boolean
 
   readonly isRuleFailurePopoverOpen: boolean
+  readonly isMyTaskPopoverOpen: boolean
+  readonly selectedTaskId: string | null
+  readonly isMyTaskLoading: boolean
+  readonly myTaskLoadError: string | null
+  readonly myTasks: ReadonlyArray<IMyTaskItem>
 
   readonly repoRuleCommitMessageFailures: RepoRulesMetadataFailures
   readonly repoRuleCommitAuthorFailures: RepoRulesMetadataFailures
   readonly repoRuleBranchNameFailures: RepoRulesMetadataFailures
+}
+
+interface IMyTaskItem {
+  readonly id: string
+  readonly description: string
+  readonly status: string
 }
 
 function findCommitMessageAutoCompleteProvider(
@@ -277,6 +290,7 @@ export class CommitMessage extends React.Component<
   private wrapperRef = React.createRef<HTMLDivElement>()
   private summaryGroupRef = React.createRef<HTMLDivElement>()
   private summaryTextInput: HTMLInputElement | null = null
+  private myTaskButtonRef: HTMLButtonElement | null = null
 
   private descriptionTextArea: HTMLTextAreaElement | null = null
   private descriptionTextAreaScrollDebounceId: number | null = null
@@ -300,6 +314,11 @@ export class CommitMessage extends React.Component<
       isCommittingStatusMessage: '',
       repoRulesEnabled: false,
       isRuleFailurePopoverOpen: false,
+      isMyTaskPopoverOpen: false,
+      selectedTaskId: null,
+      isMyTaskLoading: false,
+      myTaskLoadError: null,
+      myTasks: [],
       repoRuleCommitMessageFailures: new RepoRulesMetadataFailures(),
       repoRuleCommitAuthorFailures: new RepoRulesMetadataFailures(),
       repoRuleBranchNameFailures: new RepoRulesMetadataFailures(),
@@ -1032,9 +1051,9 @@ export class CommitMessage extends React.Component<
 
     return (
       <>
-        {(this.isCoAuthorInputEnabled || this.isCopilotButtonEnabled) && (
-          <div className="separator" />
-        )}
+        {(this.isCoAuthorInputEnabled ||
+          this.isCopilotButtonEnabled ||
+          this.isMyTaskButtonEnabled) && <div className="separator" />}
         <Button
           className={classNames('commit-options-button', {
             'default-options': !this.props.skipCommitHooks,
@@ -1047,6 +1066,194 @@ export class CommitMessage extends React.Component<
         </Button>
       </>
     )
+  }
+
+  private get isMyTaskButtonEnabled() {
+    return true
+  }
+
+  private renderMyTaskButton() {
+    if (!this.isMyTaskButtonEnabled) {
+      return null
+    }
+
+    const ariaLabel = 'My task'
+
+    return (
+      <>
+        {(this.isCoAuthorInputEnabled || this.isCopilotButtonEnabled) && (
+          <div className="separator" />
+        )}
+        <Button
+          className="my-task-button"
+          onClick={this.onMyTaskButtonClick}
+          onButtonRef={this.onMyTaskButtonRef}
+          ariaLabel={ariaLabel}
+          tooltip={ariaLabel}
+        >
+          <Octicon symbol={octicons.tasklist} />
+        </Button>
+      </>
+    )
+  }
+
+  private onMyTaskButtonRef = (elem: HTMLButtonElement | null) => {
+    this.myTaskButtonRef = elem
+  }
+
+  private onMyTaskButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    this.setState(
+      prevState => ({ isMyTaskPopoverOpen: !prevState.isMyTaskPopoverOpen }),
+      () => {
+        if (this.state.isMyTaskPopoverOpen) {
+          this.loadMyTasks()
+        }
+      }
+    )
+  }
+
+  private closeMyTaskPopover = () => {
+    this.setState({ isMyTaskPopoverOpen: false })
+  }
+
+  private renderMyTaskPopover() {
+    if (!this.state.isMyTaskPopoverOpen || this.myTaskButtonRef === null) {
+      return null
+    }
+
+    return (
+      <Popover
+        anchor={this.myTaskButtonRef}
+        anchorPosition={PopoverAnchorPosition.Right}
+        decoration={PopoverDecoration.Balloon}
+        ariaLabelledby="my-task-popover-header"
+        onClickOutside={this.closeMyTaskPopover}
+        trapFocus={false}
+        isDialog={false}
+        style={{ width: '720px' }}
+      >
+        <div className="my-task-popover">
+          <h3 id="my-task-popover-header">My tasks</h3>
+          <div className="my-task-header-row">
+            <div className="my-task-id">Task ID</div>
+            <div className="my-task-status">Status</div>
+            <div className="my-task-description">Description</div>
+          </div>
+          <div className="my-task-list">{this.renderMyTaskRows()}</div>
+        </div>
+      </Popover>
+    )
+  }
+
+  private renderMyTaskRows() {
+    if (this.state.isMyTaskLoading) {
+      return <div className="my-task-status">Loading tasks…</div>
+    }
+
+    if (this.state.myTaskLoadError) {
+      return <div className="my-task-status">{this.state.myTaskLoadError}</div>
+    }
+
+    if (this.state.myTasks.length === 0) {
+      return <div className="my-task-status">No tasks found.</div>
+    }
+
+    return this.state.myTasks.map(task => (
+      <div
+        className={classNames('my-task-row', {
+          selected: this.state.selectedTaskId === task.id,
+        })}
+        role="button"
+        tabIndex={0}
+        onClick={() => this.onMyTaskSelected(task.id)}
+        onKeyDown={event => this.onMyTaskKeyDown(event, task.id)}
+        key={task.id}
+      >
+        <div className="my-task-id">{task.id}</div>
+        <div className="my-task-status">{task.status}</div>
+        <div className="my-task-description">{task.description}</div>
+      </div>
+    ))
+  }
+
+  private async loadMyTasks() {
+    if (this.state.isMyTaskLoading) {
+      return
+    }
+
+    this.setState({ isMyTaskLoading: true, myTaskLoadError: null })
+
+    try {
+      const cookie = localStorage.getItem(itdpmCookieStorageKey)
+      if (!cookie || cookie.trim().length === 0) {
+        this.setState({
+          myTaskLoadError:
+            'Set your ITDPM cookie in Preferences → Git → ITDPM.',
+          isMyTaskLoading: false,
+        })
+        return
+      }
+      const data = (await fetchItdpmTasks(
+        cookie.trim().length > 0 ? cookie : null
+      )) as IMyTaskApiResponse
+      const records = data.result?.records ?? []
+      const tasks = records
+        .filter(record => record.sequence_name && record.name)
+        .map(record => ({
+          id: record.sequence_name,
+          description: record.name,
+          status:
+            record.stage_id && record.stage_id[1]
+              ? record.stage_id[1]
+              : 'Unknown',
+        }))
+
+      this.setState({ myTasks: tasks, isMyTaskLoading: false })
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unable to load tasks.'
+      this.setState({ myTaskLoadError: message, isMyTaskLoading: false })
+      this.props.onShowPopup({
+        type: PopupType.Error,
+        error: new Error(message),
+      })
+    }
+  }
+
+  private onMyTaskSelected = (taskId: string) => {
+    const summary = this.prependTaskIdToSummary(taskId)
+
+    this.setState(
+      {
+        selectedTaskId: taskId,
+        isMyTaskPopoverOpen: false,
+        commitMessage: {
+          ...this.state.commitMessage,
+          summary,
+          generatedByCopilot: false,
+          timestamp: Date.now(),
+        },
+      },
+      () => this.focusSummary()
+    )
+  }
+
+  private onMyTaskKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    taskId: string
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      this.onMyTaskSelected(taskId)
+    }
+  }
+
+  private prependTaskIdToSummary(taskId: string) {
+    const prefix = `[${taskId}]`
+    const existing = this.state.commitMessage.summary
+    const trimmed = existing.replace(/^\[TASK[^\]]*\]\s*/i, '')
+    return trimmed.length > 0 ? `${prefix} ${trimmed}` : prefix
   }
 
   private onCommitOptionsButtonClick = (
@@ -1166,7 +1373,8 @@ export class CommitMessage extends React.Component<
     return (
       this.isCoAuthorInputEnabled ||
       this.isCopilotButtonEnabled ||
-      this.isCommitOptionsButtonEnabled
+      this.isCommitOptionsButtonEnabled ||
+      this.isMyTaskButtonEnabled
     )
   }
 
@@ -1185,6 +1393,7 @@ export class CommitMessage extends React.Component<
       <div className={className}>
         {this.renderCoAuthorToggleButton()}
         {this.renderCopilotButton()}
+        {this.renderMyTaskButton()}
         {this.renderCommitOptionsButton()}
       </div>
     )
@@ -1775,6 +1984,8 @@ export class CommitMessage extends React.Component<
           />
           {this.renderActionBar()}
         </FocusContainer>
+
+        {this.renderMyTaskPopover()}
 
         {this.renderCoAuthorInput()}
 
