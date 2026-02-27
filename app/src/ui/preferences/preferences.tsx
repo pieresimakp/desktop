@@ -57,7 +57,7 @@ import {
   setGitHookEnvShell,
   setHooksEnvEnabled,
 } from '../../lib/hooks/config'
-import { itdpmCookieStorageKey } from '../../lib/itdpm'
+import { itdpmCookieStorageKey, itdpmEndpointStorageKey } from '../../lib/itdpm'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -153,6 +153,7 @@ interface IPreferencesState {
   // Whether the preferences related to Git hooks environment have been changed
   readonly hooksPreferencesDirty: boolean
   readonly itdpmCookie: string
+  readonly itdpmEndpoint: string
 }
 
 /**
@@ -216,6 +217,7 @@ export class Preferences extends React.Component<
       selectedGitHookEnvShell: getGitHookEnvShell(),
       hooksPreferencesDirty: false,
       itdpmCookie: localStorage.getItem(itdpmCookieStorageKey) ?? '',
+      itdpmEndpoint: localStorage.getItem(itdpmEndpointStorageKey) ?? '',
     }
   }
 
@@ -505,6 +507,8 @@ export class Preferences extends React.Component<
               }
               itdpmCookie={this.state.itdpmCookie}
               onItdpmCookieChanged={this.onItdpmCookieChanged}
+              itdpmEndpoint={this.state.itdpmEndpoint}
+              onItdpmEndpointChanged={this.onItdpmEndpointChanged}
             />
           </>
         )
@@ -650,6 +654,16 @@ export class Preferences extends React.Component<
       localStorage.removeItem(itdpmCookieStorageKey)
     } else {
       localStorage.setItem(itdpmCookieStorageKey, cookie)
+    }
+  }
+
+  private onItdpmEndpointChanged = (endpoint: string) => {
+    this.setState({ itdpmEndpoint: endpoint })
+
+    if (endpoint.trim().length === 0) {
+      localStorage.removeItem(itdpmEndpointStorageKey)
+    } else {
+      localStorage.setItem(itdpmEndpointStorageKey, endpoint)
     }
   }
 

@@ -134,5 +134,8 @@ export type RequestResponseChannels = {
   ) => Promise<string | null>
   'get-notifications-permission': () => Promise<DesktopNotificationPermission>
   'request-notifications-permission': () => Promise<boolean>
-  'fetch-itdpm-tasks': (cookie: string | null) => Promise<IMyTaskApiResponse>
+  'fetch-itdpm-tasks': (
+    endpoint: string,
+    cookie: string | null
+  ) => Promise<IMyTaskApiResponse>
 }

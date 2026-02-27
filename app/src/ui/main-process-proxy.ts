@@ -164,7 +164,7 @@ export const setWindowZoomFactor = sendProxy('set-window-zoom-factor', 1)
 /** Tell the main process to check for app updates */
 export const checkForUpdates = invokeProxy('check-for-updates', 1)
 
-export const fetchItdpmTasks = invokeProxy('fetch-itdpm-tasks', 1)
+export const fetchItdpmTasks = invokeProxy('fetch-itdpm-tasks', 2)
 
 /** Tell the main process to quit the app and install updates */
 export const quitAndInstallUpdate = sendProxy('quit-and-install-updates', 0)
