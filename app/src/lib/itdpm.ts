@@ -70,6 +70,7 @@ export const myTaskRequestBody = {
 }
 
 export interface IMyTaskApiRecord {
+  readonly id: number
   readonly sequence_name: string
   readonly name: string
   readonly stage_id: [number, string] | false

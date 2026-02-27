@@ -71,7 +71,7 @@ import { HookProgress } from '../../lib/git'
 import { assertNever } from '../../lib/fatal-error'
 import { CommitMessageEmoji } from './commit-message-emoji'
 import { itdpmCookieStorageKey, IMyTaskApiResponse } from '../../lib/itdpm'
-import { fetchItdpmTasks } from '../main-process-proxy'
+import { fetchItdpmTasks, openExternal } from '../main-process-proxy'
 
 const addAuthorIcon: OcticonSymbolVariant = {
   w: 18,
@@ -259,6 +259,7 @@ interface IMyTaskItem {
   readonly id: string
   readonly description: string
   readonly status: string
+  readonly linkId: number
 }
 
 function findCommitMessageAutoCompleteProvider(
@@ -1139,6 +1140,7 @@ export class CommitMessage extends React.Component<
             <div className="my-task-id">Task ID</div>
             <div className="my-task-status">Status</div>
             <div className="my-task-description">Description</div>
+            <div className="my-task-link" aria-hidden={true} />
           </div>
           <div className="my-task-list">{this.renderMyTaskRows()}</div>
         </div>
@@ -1173,6 +1175,14 @@ export class CommitMessage extends React.Component<
         <div className="my-task-id">{task.id}</div>
         <div className="my-task-status">{task.status}</div>
         <div className="my-task-description">{task.description}</div>
+        <Button
+          className="my-task-link"
+          onClick={event => this.onMyTaskOpenLink(event, task.linkId)}
+          ariaLabel="Open task in browser"
+          tooltip="Open task in browser"
+        >
+          <Octicon symbol={octicons.link} />
+        </Button>
       </div>
     ))
   }
@@ -1207,6 +1217,7 @@ export class CommitMessage extends React.Component<
             record.stage_id && record.stage_id[1]
               ? record.stage_id[1]
               : 'Unknown',
+          linkId: record.id,
         }))
 
       this.setState({ myTasks: tasks, isMyTaskLoading: false })
@@ -1247,6 +1258,16 @@ export class CommitMessage extends React.Component<
       event.preventDefault()
       this.onMyTaskSelected(taskId)
     }
+  }
+
+  private onMyTaskOpenLink = async (
+    event: React.MouseEvent<HTMLButtonElement>,
+    taskId: number
+  ) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const url = `https://itdpm.rpx.co.id/web#id=${taskId}&cids=1&menu_id=109&action=185&model=project.task&view_type=form`
+    await openExternal(url)
   }
 
   private prependTaskIdToSummary(taskId: string) {
