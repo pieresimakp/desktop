@@ -8,8 +8,6 @@ import { GitConfigUserForm } from '../lib/git-config-user-form'
 import { TabBar } from '../tab-bar'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { Select } from '../lib/select'
-import { TextBox } from '../lib/text-box'
-import { itdpmEndpointPlaceholder } from '../../lib/itdpm'
 import {
   shellFriendlyNames,
   SupportedHooksEnvShell,
@@ -39,11 +37,6 @@ interface IGitProps {
   readonly enableGitHookEnv: boolean
   readonly cacheGitHookEnv: boolean
   readonly selectedShell: string
-
-  readonly itdpmCookie: string
-  readonly onItdpmCookieChanged: (cookie: string) => void
-  readonly itdpmEndpoint: string
-  readonly onItdpmEndpointChanged: (endpoint: string) => void
 }
 
 const windowsShells: ReadonlyArray<SupportedHooksEnvShell> = [
@@ -78,14 +71,6 @@ export class Git extends React.Component<IGitProps> {
     event: React.FormEvent<HTMLSelectElement>
   ) => {
     this.props.onSelectedShellChanged(event.currentTarget.value)
-  }
-
-  private onItdpmCookieChanged = (value: string) => {
-    this.props.onItdpmCookieChanged(value)
-  }
-
-  private onItdpmEndpointChanged = (value: string) => {
-    this.props.onItdpmEndpointChanged(value)
   }
 
   private renderHooksSettings() {
@@ -169,7 +154,6 @@ export class Git extends React.Component<IGitProps> {
           <span>
             Hooks <span className="beta-pill">Beta</span>
           </span>
-          <span>ITDPM</span>
         </TabBar>
         <div className="git-preferences-content">{this.renderCurrentTab()}</div>
       </DialogContent>
@@ -183,34 +167,9 @@ export class Git extends React.Component<IGitProps> {
       return this.renderDefaultBranchSetting()
     } else if (this.selectedTabIndex === 2) {
       return this.renderHooksSettings()
-    } else if (this.selectedTabIndex === 3) {
-      return this.renderItdpmSettings()
     }
 
     return null
-  }
-
-  private renderItdpmSettings() {
-    return (
-      <div className="itdpm-settings">
-        <h2 id="itdpm-settings-heading">ITDPM</h2>
-        <TextBox
-          label="Endpoint"
-          value={this.props.itdpmEndpoint}
-          onValueChanged={this.onItdpmEndpointChanged}
-          placeholder={itdpmEndpointPlaceholder}
-        />
-        <TextBox
-          label="Cookie"
-          value={this.props.itdpmCookie}
-          onValueChanged={this.onItdpmCookieChanged}
-          placeholder="Paste cookie value here"
-        />
-        <p className="git-settings-description">
-          Used to load tasks for the My task list in the commit panel.
-        </p>
-      </div>
-    )
   }
 
   private renderGitConfigAuthorInfo() {

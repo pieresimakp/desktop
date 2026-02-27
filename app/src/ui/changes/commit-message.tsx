@@ -70,12 +70,11 @@ import { AriaLiveContainer } from '../accessibility/aria-live-container'
 import { HookProgress } from '../../lib/git'
 import { assertNever } from '../../lib/fatal-error'
 import { CommitMessageEmoji } from './commit-message-emoji'
-import {
-  itdpmCookieStorageKey,
-  itdpmEndpointStorageKey,
-  IMyTaskApiResponse,
-} from '../../lib/itdpm'
-import { fetchItdpmTasks, openExternal } from '../main-process-proxy'
+import { getExtensionsConfig } from '../../lib/extensions/storage'
+import { extensionRegistry } from '../../lib/extensions/registry'
+import { getEnabledExtensionsForSlot } from '../../lib/extensions/selectors'
+import { ItdpmTasksExtensionButton } from '../extensions/itdpm-tasks-extension'
+import { prependTaskIdToSummary } from '../../lib/extensions/itdpm'
 
 const addAuthorIcon: OcticonSymbolVariant = {
   w: 18,
@@ -248,22 +247,10 @@ interface ICommitMessageState {
   readonly repoRulesEnabled: boolean
 
   readonly isRuleFailurePopoverOpen: boolean
-  readonly isMyTaskPopoverOpen: boolean
-  readonly selectedTaskId: string | null
-  readonly isMyTaskLoading: boolean
-  readonly myTaskLoadError: string | null
-  readonly myTasks: ReadonlyArray<IMyTaskItem>
 
   readonly repoRuleCommitMessageFailures: RepoRulesMetadataFailures
   readonly repoRuleCommitAuthorFailures: RepoRulesMetadataFailures
   readonly repoRuleBranchNameFailures: RepoRulesMetadataFailures
-}
-
-interface IMyTaskItem {
-  readonly id: string
-  readonly description: string
-  readonly status: string
-  readonly linkId: number
 }
 
 function findCommitMessageAutoCompleteProvider(
@@ -295,7 +282,6 @@ export class CommitMessage extends React.Component<
   private wrapperRef = React.createRef<HTMLDivElement>()
   private summaryGroupRef = React.createRef<HTMLDivElement>()
   private summaryTextInput: HTMLInputElement | null = null
-  private myTaskButtonRef: HTMLButtonElement | null = null
 
   private descriptionTextArea: HTMLTextAreaElement | null = null
   private descriptionTextAreaScrollDebounceId: number | null = null
@@ -319,11 +305,6 @@ export class CommitMessage extends React.Component<
       isCommittingStatusMessage: '',
       repoRulesEnabled: false,
       isRuleFailurePopoverOpen: false,
-      isMyTaskPopoverOpen: false,
-      selectedTaskId: null,
-      isMyTaskLoading: false,
-      myTaskLoadError: null,
-      myTasks: [],
       repoRuleCommitMessageFailures: new RepoRulesMetadataFailures(),
       repoRuleCommitAuthorFailures: new RepoRulesMetadataFailures(),
       repoRuleBranchNameFailures: new RepoRulesMetadataFailures(),
@@ -561,6 +542,25 @@ export class CommitMessage extends React.Component<
         timestamp: Date.now(),
       },
     })
+  }
+
+  private onApplyTaskId = (taskId: string) => {
+    const summary = prependTaskIdToSummary(
+      this.state.commitMessage.summary,
+      taskId
+    )
+
+    this.setState(
+      {
+        commitMessage: {
+          ...this.state.commitMessage,
+          summary,
+          generatedByCopilot: false,
+          timestamp: Date.now(),
+        },
+      },
+      () => this.focusSummary()
+    )
   }
 
   private onDescriptionChanged = (description: string) => {
@@ -1058,7 +1058,9 @@ export class CommitMessage extends React.Component<
       <>
         {(this.isCoAuthorInputEnabled ||
           this.isCopilotButtonEnabled ||
-          this.isMyTaskButtonEnabled) && <div className="separator" />}
+          this.getCommitMessageExtensions().length > 0) && (
+          <div className="separator" />
+        )}
         <Button
           className={classNames('commit-options-button', {
             'default-options': !this.props.skipCommitHooks,
@@ -1071,225 +1073,6 @@ export class CommitMessage extends React.Component<
         </Button>
       </>
     )
-  }
-
-  private get isMyTaskButtonEnabled() {
-    return true
-  }
-
-  private renderMyTaskButton() {
-    if (!this.isMyTaskButtonEnabled) {
-      return null
-    }
-
-    const ariaLabel = 'My task'
-
-    return (
-      <>
-        {(this.isCoAuthorInputEnabled || this.isCopilotButtonEnabled) && (
-          <div className="separator" />
-        )}
-        <Button
-          className="my-task-button"
-          onClick={this.onMyTaskButtonClick}
-          onButtonRef={this.onMyTaskButtonRef}
-          ariaLabel={ariaLabel}
-          tooltip={ariaLabel}
-        >
-          <Octicon symbol={octicons.tasklist} />
-        </Button>
-      </>
-    )
-  }
-
-  private onMyTaskButtonRef = (elem: HTMLButtonElement | null) => {
-    this.myTaskButtonRef = elem
-  }
-
-  private onMyTaskButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    this.setState(
-      prevState => ({ isMyTaskPopoverOpen: !prevState.isMyTaskPopoverOpen }),
-      () => {
-        if (this.state.isMyTaskPopoverOpen) {
-          this.loadMyTasks()
-        }
-      }
-    )
-  }
-
-  private closeMyTaskPopover = () => {
-    this.setState({ isMyTaskPopoverOpen: false })
-  }
-
-  private renderMyTaskPopover() {
-    if (!this.state.isMyTaskPopoverOpen || this.myTaskButtonRef === null) {
-      return null
-    }
-
-    return (
-      <Popover
-        anchor={this.myTaskButtonRef}
-        anchorPosition={PopoverAnchorPosition.Right}
-        decoration={PopoverDecoration.Balloon}
-        ariaLabelledby="my-task-popover-header"
-        onClickOutside={this.closeMyTaskPopover}
-        trapFocus={false}
-        isDialog={false}
-        style={{ width: '720px' }}
-      >
-        <div className="my-task-popover">
-          <h3 id="my-task-popover-header">My tasks</h3>
-          <div className="my-task-header-row">
-            <div className="my-task-id">Task ID</div>
-            <div className="my-task-status">Status</div>
-            <div className="my-task-description">Description</div>
-            <div className="my-task-link" aria-hidden={true} />
-          </div>
-          <div className="my-task-list">{this.renderMyTaskRows()}</div>
-        </div>
-      </Popover>
-    )
-  }
-
-  private renderMyTaskRows() {
-    if (this.state.isMyTaskLoading) {
-      return <div className="my-task-status">Loading tasks…</div>
-    }
-
-    if (this.state.myTaskLoadError) {
-      return <div className="my-task-status">{this.state.myTaskLoadError}</div>
-    }
-
-    if (this.state.myTasks.length === 0) {
-      return <div className="my-task-status">No tasks found.</div>
-    }
-
-    return this.state.myTasks.map(task => (
-      <div
-        className={classNames('my-task-row', {
-          selected: this.state.selectedTaskId === task.id,
-        })}
-        role="button"
-        tabIndex={0}
-        onClick={() => this.onMyTaskSelected(task.id)}
-        onKeyDown={event => this.onMyTaskKeyDown(event, task.id)}
-        key={task.id}
-      >
-        <div className="my-task-id">{task.id}</div>
-        <div className="my-task-status">{task.status}</div>
-        <div className="my-task-description">{task.description}</div>
-        <Button
-          className="my-task-link"
-          onClick={event => this.onMyTaskOpenLink(event, task.linkId)}
-          ariaLabel="Open task in browser"
-          tooltip="Open task in browser"
-        >
-          <Octicon symbol={octicons.link} />
-        </Button>
-      </div>
-    ))
-  }
-
-  private async loadMyTasks() {
-    if (this.state.isMyTaskLoading) {
-      return
-    }
-
-    this.setState({ isMyTaskLoading: true, myTaskLoadError: null })
-
-    try {
-      const endpoint = localStorage.getItem(itdpmEndpointStorageKey)
-      if (!endpoint || endpoint.trim().length === 0) {
-        this.setState({
-          myTaskLoadError:
-            'Set the ITDPM endpoint in Preferences → Git → ITDPM.',
-          isMyTaskLoading: false,
-        })
-        return
-      }
-
-      const cookie = localStorage.getItem(itdpmCookieStorageKey)
-      if (!cookie || cookie.trim().length === 0) {
-        this.setState({
-          myTaskLoadError:
-            'Set your ITDPM cookie in Preferences → Git → ITDPM.',
-          isMyTaskLoading: false,
-        })
-        return
-      }
-      const data = (await fetchItdpmTasks(
-        endpoint,
-        cookie.trim().length > 0 ? cookie : null
-      )) as IMyTaskApiResponse
-      const records = data.result?.records ?? []
-      const tasks = records
-        .filter(record => record.sequence_name && record.name)
-        .map(record => ({
-          id: record.sequence_name,
-          description: record.name,
-          status:
-            record.stage_id && record.stage_id[1]
-              ? record.stage_id[1]
-              : 'Unknown',
-          linkId: record.id,
-        }))
-
-      this.setState({ myTasks: tasks, isMyTaskLoading: false })
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unable to load tasks.'
-      this.setState({ myTaskLoadError: message, isMyTaskLoading: false })
-      this.props.onShowPopup({
-        type: PopupType.Error,
-        error: new Error(message),
-      })
-    }
-  }
-
-  private onMyTaskSelected = (taskId: string) => {
-    const summary = this.prependTaskIdToSummary(taskId)
-
-    this.setState(
-      {
-        selectedTaskId: taskId,
-        isMyTaskPopoverOpen: false,
-        commitMessage: {
-          ...this.state.commitMessage,
-          summary,
-          generatedByCopilot: false,
-          timestamp: Date.now(),
-        },
-      },
-      () => this.focusSummary()
-    )
-  }
-
-  private onMyTaskKeyDown = (
-    event: React.KeyboardEvent<HTMLDivElement>,
-    taskId: string
-  ) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      this.onMyTaskSelected(taskId)
-    }
-  }
-
-  private onMyTaskOpenLink = async (
-    event: React.MouseEvent<HTMLButtonElement>,
-    taskId: number
-  ) => {
-    event.preventDefault()
-    event.stopPropagation()
-    const url = `https://itdpm.rpx.co.id/web#id=${taskId}&cids=1&menu_id=109&action=185&model=project.task&view_type=form`
-    await openExternal(url)
-  }
-
-  private prependTaskIdToSummary(taskId: string) {
-    const prefix = `[${taskId}]`
-    const existing = this.state.commitMessage.summary
-    const trimmed = existing.replace(/^\[TASK[^\]]*\]\s*/i, '')
-    return trimmed.length > 0 ? `${prefix} ${trimmed}` : prefix
   }
 
   private onCommitOptionsButtonClick = (
@@ -1406,11 +1189,12 @@ export class CommitMessage extends React.Component<
    * Whether or not there's anything to render in the action bar
    */
   private get isActionBarEnabled() {
+    const extensions = this.getCommitMessageExtensions()
     return (
       this.isCoAuthorInputEnabled ||
       this.isCopilotButtonEnabled ||
       this.isCommitOptionsButtonEnabled ||
-      this.isMyTaskButtonEnabled
+      extensions.length > 0
     )
   }
 
@@ -1429,10 +1213,40 @@ export class CommitMessage extends React.Component<
       <div className={className}>
         {this.renderCoAuthorToggleButton()}
         {this.renderCopilotButton()}
-        {this.renderMyTaskButton()}
+        {this.renderExtensionButtons()}
         {this.renderCommitOptionsButton()}
       </div>
     )
+  }
+
+  private getCommitMessageExtensions() {
+    return getEnabledExtensionsForSlot(
+      extensionRegistry,
+      getExtensionsConfig(),
+      'commit-message-action'
+    )
+  }
+
+  private renderExtensionButtons() {
+    const extensions = this.getCommitMessageExtensions()
+
+    return extensions.map(extension => {
+      if (extension.id === 'itdpm.tasks') {
+        return (
+          <ItdpmTasksExtensionButton
+            key={extension.id}
+            config={{
+              endpoint: extension.config.endpoint ?? '',
+              cookie: extension.config.cookie ?? '',
+            }}
+            onApplyTaskId={this.onApplyTaskId}
+            onShowPopup={this.props.onShowPopup}
+          />
+        )
+      }
+
+      return null
+    })
   }
 
   private renderAmendCommitNotice() {
@@ -2020,8 +1834,6 @@ export class CommitMessage extends React.Component<
           />
           {this.renderActionBar()}
         </FocusContainer>
-
-        {this.renderMyTaskPopover()}
 
         {this.renderCoAuthorInput()}
 

@@ -42,6 +42,7 @@ import { Prompts } from './prompts'
 import { Repository } from '../../models/repository'
 import { Notifications } from './notifications'
 import { Accessibility } from './accessibility'
+import { Extensions } from './extensions'
 import {
   ICustomIntegration,
   TargetPathArgument,
@@ -57,7 +58,19 @@ import {
   setGitHookEnvShell,
   setHooksEnvEnabled,
 } from '../../lib/hooks/config'
-import { itdpmCookieStorageKey, itdpmEndpointStorageKey } from '../../lib/itdpm'
+import { extensionRegistry } from '../../lib/extensions/registry'
+import {
+  getExtensionsConfig,
+  setExtensionsConfig,
+} from '../../lib/extensions/storage'
+import { buildExtensionsList } from '../../lib/extensions/selectors'
+import {
+  toggleExtensionEnabled,
+  updateExtensionConfig,
+  removeExtensionConfig,
+  upsertExtensionConfig,
+} from '../../lib/extensions/operations'
+import { IExtensionConfig } from '../../lib/extensions/types'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -152,8 +165,8 @@ interface IPreferencesState {
   readonly selectedGitHookEnvShell: string | undefined
   // Whether the preferences related to Git hooks environment have been changed
   readonly hooksPreferencesDirty: boolean
-  readonly itdpmCookie: string
-  readonly itdpmEndpoint: string
+  readonly extensionConfigs: ReadonlyArray<IExtensionConfig>
+  readonly selectedExtensionId: string | null
 }
 
 /**
@@ -216,8 +229,8 @@ export class Preferences extends React.Component<
       cacheGitHookEnv: getCacheHooksEnv(),
       selectedGitHookEnvShell: getGitHookEnvShell(),
       hooksPreferencesDirty: false,
-      itdpmCookie: localStorage.getItem(itdpmCookieStorageKey) ?? '',
-      itdpmEndpoint: localStorage.getItem(itdpmEndpointStorageKey) ?? '',
+      extensionConfigs: getExtensionsConfig(),
+      selectedExtensionId: null,
     }
   }
 
@@ -347,6 +360,10 @@ export class Preferences extends React.Component<
               <Octicon className="icon" symbol={octicons.accessibility} />
               Accessibility
             </span>
+            <span id={this.getTabId(PreferencesTab.Extensions)}>
+              <Octicon className="icon" symbol={octicons.package_} />
+              Extensions
+            </span>
           </TabBar>
 
           {this.renderActiveTab()}
@@ -382,6 +399,9 @@ export class Preferences extends React.Component<
         break
       case PreferencesTab.Accessibility:
         suffix = 'accessibility'
+        break
+      case PreferencesTab.Extensions:
+        suffix = 'extensions'
         break
       default:
         return assertNever(tab, `Unknown tab type: ${tab}`)
@@ -505,10 +525,6 @@ export class Preferences extends React.Component<
               selectedShell={
                 this.state.selectedGitHookEnvShell ?? defaultGitHookEnvShell
               }
-              itdpmCookie={this.state.itdpmCookie}
-              onItdpmCookieChanged={this.onItdpmCookieChanged}
-              itdpmEndpoint={this.state.itdpmEndpoint}
-              onItdpmEndpointChanged={this.onItdpmEndpointChanged}
             />
           </>
         )
@@ -608,6 +624,22 @@ export class Preferences extends React.Component<
           />
         )
         break
+      case PreferencesTab.Extensions:
+        View = (
+          <Extensions
+            extensions={buildExtensionsList(
+              extensionRegistry,
+              this.state.extensionConfigs
+            )}
+            selectedExtensionId={this.state.selectedExtensionId ?? undefined}
+            itdpmConfig={this.getItdpmConfig()}
+            onToggle={this.onExtensionToggle}
+            onEdit={this.onExtensionEdit}
+            onRemove={this.onExtensionRemove}
+            onItdpmConfigChange={this.onItdpmConfigChange}
+          />
+        )
+        break
       default:
         return assertNever(index, `Unknown tab index: ${index}`)
     }
@@ -637,6 +669,75 @@ export class Preferences extends React.Component<
     this.props.dispatcher.postError(e)
   }
 
+  private updateExtensionConfigs = (
+    extensionConfigs: ReadonlyArray<IExtensionConfig>
+  ) => {
+    this.setState({ extensionConfigs })
+    setExtensionsConfig(extensionConfigs)
+  }
+
+  private onExtensionToggle = (id: string, enabled: boolean) => {
+    const existing = this.state.extensionConfigs.find(
+      config => config.id === id
+    )
+    const definition = extensionRegistry.find(ext => ext.id === id)
+    const config = existing?.config ?? definition?.defaultConfig ?? {}
+    const next = existing
+      ? toggleExtensionEnabled(this.state.extensionConfigs, id, enabled)
+      : upsertExtensionConfig(this.state.extensionConfigs, {
+          id,
+          enabled,
+          config,
+        })
+
+    this.updateExtensionConfigs(next)
+  }
+
+  private onExtensionEdit = (_id: string) => {
+    this.setState({ selectedExtensionId: _id })
+  }
+
+  private onExtensionRemove = (id: string) => {
+    if (this.state.selectedExtensionId === id) {
+      this.setState({ selectedExtensionId: null })
+    }
+    this.updateExtensionConfigs(
+      removeExtensionConfig(this.state.extensionConfigs, id)
+    )
+  }
+
+  private onItdpmConfigChange = (updates: {
+    readonly endpoint?: string
+    readonly cookie?: string
+  }) => {
+    const id = 'itdpm.tasks'
+    const definition = extensionRegistry.find(ext => ext.id === id)
+    const existing = this.state.extensionConfigs.find(
+      config => config.id === id
+    )
+
+    const next = existing
+      ? updateExtensionConfig(this.state.extensionConfigs, id, updates)
+      : upsertExtensionConfig(this.state.extensionConfigs, {
+          id,
+          enabled: true,
+          config: { ...definition?.defaultConfig, ...updates },
+        })
+
+    this.updateExtensionConfigs(next)
+  }
+
+  private getItdpmConfig() {
+    const existing = this.state.extensionConfigs.find(
+      config => config.id === 'itdpm.tasks'
+    )
+
+    return {
+      endpoint: existing?.config.endpoint ?? '',
+      cookie: existing?.config.cookie ?? '',
+    }
+  }
+
   private onUseWindowsOpenSSHChanged = (useWindowsOpenSSH: boolean) => {
     this.setState({ useWindowsOpenSSH })
   }
@@ -645,26 +746,6 @@ export class Preferences extends React.Component<
     showCommitLengthWarning: boolean
   ) => {
     this.setState({ showCommitLengthWarning })
-  }
-
-  private onItdpmCookieChanged = (cookie: string) => {
-    this.setState({ itdpmCookie: cookie })
-
-    if (cookie.trim().length === 0) {
-      localStorage.removeItem(itdpmCookieStorageKey)
-    } else {
-      localStorage.setItem(itdpmCookieStorageKey, cookie)
-    }
-  }
-
-  private onItdpmEndpointChanged = (endpoint: string) => {
-    this.setState({ itdpmEndpoint: endpoint })
-
-    if (endpoint.trim().length === 0) {
-      localStorage.removeItem(itdpmEndpointStorageKey)
-    } else {
-      localStorage.setItem(itdpmEndpointStorageKey, endpoint)
-    }
   }
 
   private onNotificationsEnabledChanged = (notificationsEnabled: boolean) => {

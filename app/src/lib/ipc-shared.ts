@@ -17,7 +17,7 @@ import { DesktopNotificationPermission } from 'desktop-notifications'
 import { NotificationCallback } from 'desktop-notifications'
 import { DesktopAliveEvent } from './stores/alive-store'
 import { CLIAction } from './cli-action'
-import { IMyTaskApiResponse } from './itdpm'
+import { IItdpmResponse } from './extensions/itdpm-api'
 
 /**
  * Defines the simplex IPC channel names we use from the renderer
@@ -137,5 +137,5 @@ export type RequestResponseChannels = {
   'fetch-itdpm-tasks': (
     endpoint: string,
     cookie: string | null
-  ) => Promise<IMyTaskApiResponse>
+  ) => Promise<IItdpmResponse>
 }

@@ -1,17 +1,15 @@
 import { net } from 'electron'
-import { myTaskRequestBody, IMyTaskApiResponse } from '../lib/itdpm'
+import { itdpmRequestBody, IItdpmResponse } from '../lib/extensions/itdpm-api'
 
 export async function fetchItdpmTasks(
   endpoint: string,
   cookie: string | null
-): Promise<IMyTaskApiResponse> {
+): Promise<IItdpmResponse> {
   return new Promise((resolve, reject) => {
     const request = net.request({ method: 'POST', url: endpoint })
 
     request.setHeader('Accept', 'application/json')
     request.setHeader('Content-Type', 'application/json')
-    request.setHeader('Origin', 'https://itdpm.rpx.co.id')
-    request.setHeader('Referer', 'https://itdpm.rpx.co.id/web')
 
     if (cookie && cookie.trim().length > 0) {
       request.setHeader('Cookie', cookie)
@@ -34,7 +32,7 @@ export async function fetchItdpmTasks(
         }
 
         try {
-          const json = JSON.parse(body) as IMyTaskApiResponse
+          const json = JSON.parse(body) as IItdpmResponse
 
           if (json.error) {
             const message =
@@ -53,6 +51,6 @@ export async function fetchItdpmTasks(
     })
 
     request.on('error', reject)
-    request.end(JSON.stringify(myTaskRequestBody))
+    request.end(JSON.stringify(itdpmRequestBody))
   })
 }

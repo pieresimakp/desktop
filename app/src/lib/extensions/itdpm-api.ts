@@ -1,8 +1,23 @@
-export const itdpmCookieStorageKey = 'itdpm-cookie'
-export const itdpmEndpointStorageKey = 'itdpm-endpoint'
-export const itdpmEndpointPlaceholder = 'https://example.com'
+export interface IItdpmTaskRecord {
+  readonly id: number
+  readonly sequence_name: string
+  readonly name: string
+  readonly stage_id: [number, string] | false
+}
 
-export const myTaskRequestBody = {
+export interface IItdpmResponse {
+  readonly result?: {
+    readonly records?: ReadonlyArray<IItdpmTaskRecord>
+  }
+  readonly error?: {
+    readonly message?: string
+    readonly data?: {
+      readonly message?: string
+    }
+  }
+}
+
+export const itdpmRequestBody = {
   id: 16,
   jsonrpc: '2.0',
   method: 'call',
@@ -67,23 +82,4 @@ export const myTaskRequestBody = {
       bin_size: true,
     },
   },
-}
-
-export interface IMyTaskApiRecord {
-  readonly id: number
-  readonly sequence_name: string
-  readonly name: string
-  readonly stage_id: [number, string] | false
-}
-
-export interface IMyTaskApiResponse {
-  readonly result?: {
-    readonly records?: ReadonlyArray<IMyTaskApiRecord>
-  }
-  readonly error?: {
-    readonly message?: string
-    readonly data?: {
-      readonly message?: string
-    }
-  }
 }
