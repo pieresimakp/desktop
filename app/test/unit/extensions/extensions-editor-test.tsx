@@ -9,7 +9,12 @@ describe('Extensions editor', () => {
     const html = renderToStaticMarkup(
       <Extensions
         extensions={[
-          { id: 'itdpm.tasks', name: 'ITDPM My Tasks', enabled: true },
+          {
+            id: 'itdpm.tasks',
+            name: 'ITDPM My Tasks',
+            enabled: true,
+            canEdit: true,
+          },
         ]}
         selectedExtensionId="itdpm.tasks"
         itdpmConfig={{ endpoint: '', cookie: '' }}

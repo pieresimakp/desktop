@@ -15,6 +15,13 @@ export interface IConfiguredExtension extends IExtensionDefinition {
 
 export const extensionRegistry: ReadonlyArray<IExtensionDefinition> = [
   {
+    id: 'gitmoji',
+    name: 'Gitmoji',
+    slot: 'commit-message-action',
+    defaultEnabled: true,
+    defaultConfig: {},
+  },
+  {
     id: 'itdpm.tasks',
     name: 'ITDPM My Tasks',
     slot: 'commit-message-action',

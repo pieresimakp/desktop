@@ -37,6 +37,7 @@ interface ICommitMessageEmojiState {
 }
 
 interface ICommitMessageEmojiProps {
+  readonly buttonClassName?: string
   readonly commitValue?: string
   readonly commitValueChanged: (value: string) => void
   // /** The user whose avatar should be displayed. */
@@ -115,110 +116,110 @@ export class CommitMessageEmoji extends React.Component<
       {
         emoji: '✨',
         code: ':sparkles:',
-        description: '[FEATURE] - New feature implementation'
+        description: '[FEATURE] - New feature implementation',
       },
       {
         emoji: '🐛',
         code: ':bug:',
-        description: '[BUG] - Bug fix'
+        description: '[BUG] - Bug fix',
       },
       {
         emoji: '🔒',
         code: ':lock:',
-        description: '[SECRET] - Security/secret related changes'
+        description: '[SECRET] - Security/secret related changes',
       },
       {
         emoji: '🔒',
         code: ':lock:',
-        description: '[SECURITY] - Security improvements'
+        description: '[SECURITY] - Security improvements',
       },
       {
         emoji: '🎨',
         code: ':art:',
-        description: '[UI] - User interface changes'
+        description: '[UI] - User interface changes',
       },
       {
         emoji: '🔖',
         code: ':bookmark:',
-        description: '[VERSION] - Version release'
+        description: '[VERSION] - Version release',
       },
       {
         emoji: '♻️',
         code: ':recycle:',
-        description: '[REFACTOR] - Code refactoring'
+        description: '[REFACTOR] - Code refactoring',
       },
       {
         emoji: '🔧',
         code: ':wrench:',
-        description: '[CONFIG] - Configuration changes'
+        description: '[CONFIG] - Configuration changes',
       },
       {
         emoji: '📚',
         code: ':books:',
-        description: '[DOCS] - Documentation updates'
+        description: '[DOCS] - Documentation updates',
       },
       {
         emoji: '📚',
         code: ':books:',
-        description: '[TODO] - TODO items'
+        description: '[TODO] - TODO items',
       },
       {
         emoji: '📊',
         code: ':bar_chart:',
-        description: '[REPORT] - Report generation'
+        description: '[REPORT] - Report generation',
       },
       {
         emoji: '🧪',
         code: ':test_tube:',
-        description: '[TEST] - Testing related changes'
+        description: '[TEST] - Testing related changes',
       },
       {
         emoji: '🗃️',
         code: ':card_file_box:',
-        description: '[DATABASE] - Database changes'
+        description: '[DATABASE] - Database changes',
       },
       {
         emoji: '🎨',
         code: ':art:',
-        description: '[STRUCTURE] - Code structure improvement'
+        description: '[STRUCTURE] - Code structure improvement',
       },
       {
         emoji: '➕',
         code: ':heavy_plus_sign:',
-        description: '[DEPENDENCY] - Add dependency'
+        description: '[DEPENDENCY] - Add dependency',
       },
       {
         emoji: '➕',
         code: ':heavy_plus_sign:',
-        description: '[SDK] - SDK related changes'
+        description: '[SDK] - SDK related changes',
       },
       {
         emoji: '🎨',
         code: ':art:',
-        description: '[CLEAN] - Code cleanup'
+        description: '[CLEAN] - Code cleanup',
       },
       {
         emoji: '🎨',
         code: ':art:',
-        description: '[MISC] - Miscellaneous changes'
+        description: '[MISC] - Miscellaneous changes',
       },
       {
         emoji: '🎨',
         code: ':art:',
-        description: '[CODE IMPROVEMENT] - Code improvement'
+        description: '[CODE IMPROVEMENT] - Code improvement',
       },
       {
         emoji: '✨',
         code: ':sparkles:',
-        description: '[ENDPOINT] - API endpoint changes'
-      }
+        description: '[ENDPOINT] - API endpoint changes',
+      },
     ]
 
     this.state = {
       isPopoverOpen: false,
       isGitConfigLocal: false,
       emojiData,
-      selectedEmojiRows: []
+      selectedEmojiRows: [],
     }
   }
 
@@ -240,7 +241,7 @@ export class CommitMessageEmoji extends React.Component<
     return (
       <div>
         <Button
-          className="avatar-button"
+          className={this.props.buttonClassName ?? 'avatar-button'}
           ariaLabel={ariaLabel}
           onButtonRef={this.onButtonRef}
           onClick={this.onAvatarClick}
@@ -281,12 +282,10 @@ export class CommitMessageEmoji extends React.Component<
     }
   }
 
-
   // private renderWarningPopover() {
   //   return <div>TES</div>
   // }
 
-  
   private renderPopover() {
     return (
       <Popover
@@ -299,8 +298,10 @@ export class CommitMessageEmoji extends React.Component<
         trapFocus={false}
         isDialog={false}
       >
-        <h3 id="commit-avatar-popover-header" style={{ margin: '0 0 12px 0' }}>GitMoji</h3>
-        
+        <h3 id="commit-avatar-popover-header" style={{ margin: '0 0 12px 0' }}>
+          GitMoji
+        </h3>
+
         <div style={{ height: '350px', width: '100%' }}>
           <SectionList
             rowCount={[this.state.emojiData.length]} // Single section with all emoji rows
@@ -317,62 +318,64 @@ export class CommitMessageEmoji extends React.Component<
       </Popover>
     )
   }
-  
+
   private renderEmojiRow = (indexPath: RowIndexPath) => {
     const emojiItem = this.state.emojiData[indexPath.row]
-    
+
     // Extract the category name from the description (e.g., "[FEATURE]" from "[FEATURE] - New feature implementation")
     const categoryMatch = emojiItem.description.match(/\[([^\]]+)\]/)
-    const categoryName = categoryMatch ? `[${categoryMatch[1]}]` : emojiItem.code
+    const categoryName = categoryMatch
+      ? `[${categoryMatch[1]}]`
+      : emojiItem.code
     const description = emojiItem.description.replace(/\[[^\]]+\]\s*-?\s*/, '')
-    
+
     return (
-      <div 
-        className="emoji-row" 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+      <div
+        className="emoji-row"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
           padding: '8px 12px',
           cursor: 'pointer',
           borderRadius: '4px',
           minHeight: '40px',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
         }}
       >
-        <span 
-          className="emoji-icon" 
-          style={{ 
-            fontSize: '18px', 
+        <span
+          className="emoji-icon"
+          style={{
+            fontSize: '18px',
             marginRight: '12px',
             minWidth: '24px',
-            textAlign: 'center'
+            textAlign: 'center',
           }}
         >
           {emojiItem.emoji}
         </span>
         <div className="emoji-info" style={{ flex: 1, minWidth: 0 }}>
-          <div 
-            className="emoji-code" 
-            style={{ 
-              fontWeight: '600', 
+          <div
+            className="emoji-code"
+            style={{
+              fontWeight: '600',
               fontSize: '13px',
               fontFamily: 'var(--font-family-monospace, monospace)',
               color: 'var(--text-color)',
-              marginBottom: '2px'
+              marginBottom: '2px',
             }}
           >
             {categoryName}
           </div>
-          <div 
-            className="emoji-description" 
-            style={{ 
-              fontSize: '11px', 
+          <div
+            className="emoji-description"
+            style={{
+              fontSize: '11px',
               color: 'var(--text-secondary-color, #666)',
               lineHeight: '1.2',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              maxWidth: '100%'
+              maxWidth: '100%',
             }}
             title={emojiItem.description}
           >
@@ -385,18 +388,22 @@ export class CommitMessageEmoji extends React.Component<
 
   private onEmojiRowSelected = (indexPath: RowIndexPath) => {
     this.setState({
-      selectedEmojiRows: [indexPath]
+      selectedEmojiRows: [indexPath],
     })
   }
 
   private onEmojiRowClick = (indexPath: RowIndexPath) => {
     const emojiItem = this.state.emojiData[indexPath.row]
-    
+
     // Extract the category name from the description (e.g., "[FEATURE]" from "[FEATURE] - New feature implementation")
     const categoryMatch = emojiItem.description.match(/\[([^\]]+)\]/)
-    const categoryName = categoryMatch ? `[${categoryMatch[1]}]` : emojiItem.code
+    const categoryName = categoryMatch
+      ? `[${categoryMatch[1]}]`
+      : emojiItem.code
 
-    this.props.commitValueChanged(`${emojiItem.emoji} ${categoryName} ${this.props.commitValue}`)
+    this.props.commitValueChanged(
+      `${emojiItem.emoji} ${categoryName} ${this.props.commitValue}`
+    )
     // Here you could emit the selected emoji to parent component
     this.closePopover()
   }
@@ -405,7 +412,9 @@ export class CommitMessageEmoji extends React.Component<
     const emojiItem = this.state.emojiData[indexPath.row]
     // Extract the category name from the description for accessibility
     const categoryMatch = emojiItem.description.match(/\[([^\]]+)\]/)
-    const categoryName = categoryMatch ? `[${categoryMatch[1]}]` : emojiItem.code
+    const categoryName = categoryMatch
+      ? `[${categoryMatch[1]}]`
+      : emojiItem.code
     const description = emojiItem.description.replace(/\[[^\]]+\]\s*-?\s*/, '')
     return `${categoryName}: ${description}`
   }

@@ -253,6 +253,7 @@
 
   .co-authors-toggle,
   .commit-options-button,
+  .gitmoji-button,
   .my-task-button {
     color: var(--text-color);
 
@@ -369,6 +370,7 @@
 
     .co-authors-toggle,
     .copilot-button,
+    .gitmoji-button,
     .my-task-button,
     .commit-options-button {
       // button reset styles
@@ -402,6 +404,15 @@
         width: 18px;
         pointer-events: none;
       }
+    }
+
+    .gitmoji-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1;
+      text-align: center;
     }
   }
 
