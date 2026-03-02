@@ -198,6 +198,10 @@ import {
 } from './secret-scanning/bypass-push-protection-dialog'
 import { HookFailed } from './hook-failed/hook-failed'
 import { CommitProgress } from './commit-progress/commit-progress'
+import { extensionRegistry } from '../lib/extensions/registry'
+import { getEnabledExtensionsForSlot } from '../lib/extensions/selectors'
+import { getExtensionsConfig } from '../lib/extensions/storage'
+import { TrelloToolbarExtensionButton } from './extensions/trello-toolbar-extension'
 
 const MinuteInMilliseconds = 1000 * 60
 const HourInMilliseconds = MinuteInMilliseconds * 60
@@ -3393,7 +3397,41 @@ export class App extends React.Component<IAppProps, IAppState> {
         </div>
         {this.renderBranchToolbarButton()}
         {this.renderPushPullToolbarButton()}
+        {this.renderToolbarExtensionButtons()}
       </Toolbar>
+    )
+  }
+
+  private renderToolbarExtensionButtons(): JSX.Element | null {
+    const selection = this.state.selectedState
+    if (!selection || selection.type !== SelectionType.Repository) {
+      return null
+    }
+
+    const extensions = getEnabledExtensionsForSlot(
+      extensionRegistry,
+      getExtensionsConfig(),
+      'toolbar-action'
+    )
+
+    const trello = extensions.find(extension => extension.id === 'trello.panel')
+    if (!trello) {
+      return null
+    }
+
+    return (
+      <TrelloToolbarExtensionButton
+        repository={{
+          path: selection.repository.path,
+          name: selection.repository.name,
+        }}
+        config={{
+          apiKey: trello.config.apiKey ?? '',
+          token: trello.config.token ?? '',
+          boardId: trello.config.boardId ?? '',
+          listId: trello.config.listId ?? '',
+        }}
+      />
     )
   }
 

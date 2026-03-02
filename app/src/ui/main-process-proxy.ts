@@ -165,6 +165,10 @@ export const setWindowZoomFactor = sendProxy('set-window-zoom-factor', 1)
 export const checkForUpdates = invokeProxy('check-for-updates', 1)
 
 export const fetchItdpmTasks = invokeProxy('fetch-itdpm-tasks', 2)
+export const fetchTrelloBoards = invokeProxy('fetch-trello-boards', 2)
+export const fetchTrelloLists = invokeProxy('fetch-trello-lists', 3)
+export const fetchTrelloCards = invokeProxy('fetch-trello-cards', 3)
+export const createTrelloCard = invokeProxy('create-trello-card', 8)
 
 /** Tell the main process to quit the app and install updates */
 export const quitAndInstallUpdate = sendProxy('quit-and-install-updates', 0)

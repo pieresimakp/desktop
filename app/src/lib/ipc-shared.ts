@@ -18,6 +18,12 @@ import { NotificationCallback } from 'desktop-notifications'
 import { DesktopAliveEvent } from './stores/alive-store'
 import { CLIAction } from './cli-action'
 import { IItdpmResponse } from './extensions/itdpm-api'
+import {
+  ITrelloBoard,
+  ITrelloCard,
+  ITrelloCreatedCard,
+  ITrelloList,
+} from './extensions/trello-api'
 
 /**
  * Defines the simplex IPC channel names we use from the renderer
@@ -138,4 +144,28 @@ export type RequestResponseChannels = {
     endpoint: string,
     cookie: string | null
   ) => Promise<IItdpmResponse>
+  'fetch-trello-boards': (
+    apiKey: string,
+    token: string
+  ) => Promise<ReadonlyArray<ITrelloBoard>>
+  'fetch-trello-lists': (
+    apiKey: string,
+    token: string,
+    boardId: string
+  ) => Promise<ReadonlyArray<ITrelloList>>
+  'fetch-trello-cards': (
+    apiKey: string,
+    token: string,
+    listId: string
+  ) => Promise<ReadonlyArray<ITrelloCard>>
+  'create-trello-card': (
+    apiKey: string,
+    token: string,
+    boardId: string,
+    listId: string,
+    name: string,
+    description: string,
+    issueType: string,
+    priority: string
+  ) => Promise<ITrelloCreatedCard>
 }

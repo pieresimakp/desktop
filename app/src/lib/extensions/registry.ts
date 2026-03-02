@@ -31,6 +31,18 @@ export const extensionRegistry: ReadonlyArray<IExtensionDefinition> = [
       cookie: '',
     },
   },
+  {
+    id: 'trello.panel',
+    name: 'Trello Toolbar Action',
+    slot: 'toolbar-action',
+    defaultEnabled: false,
+    defaultConfig: {
+      apiKey: '',
+      token: '',
+      boardId: '',
+      listId: '',
+    },
+  },
 ]
 
 export const getConfiguredExtensions = (

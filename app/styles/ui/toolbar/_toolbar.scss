@@ -61,6 +61,13 @@
         width: 100%;
       }
     }
+    &.trello-toolbar-button {
+      width: 230px;
+
+      &.resizable {
+        width: 100%;
+      }
+    }
     &.toolbar-dropdown-arrow-button {
       width: 39px;
       &.resizable {

@@ -633,10 +633,12 @@ export class Preferences extends React.Component<
             )}
             selectedExtensionId={this.state.selectedExtensionId ?? undefined}
             itdpmConfig={this.getItdpmConfig()}
+            trelloConfig={this.getTrelloConfig()}
             onToggle={this.onExtensionToggle}
             onEdit={this.onExtensionEdit}
             onRemove={this.onExtensionRemove}
             onItdpmConfigChange={this.onItdpmConfigChange}
+            onTrelloConfigChange={this.onTrelloConfigChange}
           />
         )
         break
@@ -735,6 +737,42 @@ export class Preferences extends React.Component<
     return {
       endpoint: existing?.config.endpoint ?? '',
       cookie: existing?.config.cookie ?? '',
+    }
+  }
+
+  private onTrelloConfigChange = (updates: {
+    readonly apiKey?: string
+    readonly token?: string
+    readonly boardId?: string
+    readonly listId?: string
+  }) => {
+    const id = 'trello.panel'
+    const definition = extensionRegistry.find(ext => ext.id === id)
+    const existing = this.state.extensionConfigs.find(
+      config => config.id === id
+    )
+
+    const next = existing
+      ? updateExtensionConfig(this.state.extensionConfigs, id, updates)
+      : upsertExtensionConfig(this.state.extensionConfigs, {
+          id,
+          enabled: true,
+          config: { ...definition?.defaultConfig, ...updates },
+        })
+
+    this.updateExtensionConfigs(next)
+  }
+
+  private getTrelloConfig() {
+    const existing = this.state.extensionConfigs.find(
+      config => config.id === 'trello.panel'
+    )
+
+    return {
+      apiKey: existing?.config.apiKey ?? '',
+      token: existing?.config.token ?? '',
+      boardId: existing?.config.boardId ?? '',
+      listId: existing?.config.listId ?? '',
     }
   }
 
