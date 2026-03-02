@@ -1261,10 +1261,24 @@ export class CommitMessage extends React.Component<
       <div className={className}>
         {this.renderCoAuthorToggleButton()}
         {this.renderCopilotButton()}
+        {this.renderExtensionsSeparator()}
         {this.renderExtensionButtons()}
         {this.renderCommitOptionsButton()}
       </div>
     )
+  }
+
+  private renderExtensionsSeparator() {
+    const hasExtensions = this.getCommitMessageExtensions().length > 0
+    if (!hasExtensions) {
+      return null
+    }
+
+    if (this.isCoAuthorInputEnabled || this.isCopilotButtonEnabled) {
+      return <div className="separator" />
+    }
+
+    return null
   }
 
   private getCommitMessageExtensions() {
@@ -1278,18 +1292,21 @@ export class CommitMessage extends React.Component<
   private renderExtensionButtons() {
     const extensions = this.getCommitMessageExtensions()
 
-    return extensions.map(extension => {
+    return extensions.map((extension, index) => {
+      const needsSeparator = index > 0
       if (extension.id === 'itdpm.tasks') {
         return (
-          <ItdpmTasksExtensionButton
-            key={extension.id}
-            config={{
-              endpoint: extension.config.endpoint ?? '',
-              cookie: extension.config.cookie ?? '',
-            }}
-            onApplyTaskId={this.onApplyTaskId}
-            onShowPopup={this.props.onShowPopup}
-          />
+          <React.Fragment key={extension.id}>
+            {needsSeparator && <div className="separator" />}
+            <ItdpmTasksExtensionButton
+              config={{
+                endpoint: extension.config.endpoint ?? '',
+                cookie: extension.config.cookie ?? '',
+              }}
+              onApplyTaskId={this.onApplyTaskId}
+              onShowPopup={this.props.onShowPopup}
+            />
+          </React.Fragment>
         )
       }
 
