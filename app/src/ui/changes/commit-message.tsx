@@ -823,6 +823,7 @@ export class CommitMessage extends React.Component<
   private renderEmojiButton() {
     return (
       <CommitMessageEmoji
+        buttonClassName="gitmoji-button"
         commitValue={this.state.commitMessage.summary}
         commitValueChanged={this.onSummaryChanged}
       />
@@ -1241,12 +1242,13 @@ export class CommitMessage extends React.Component<
    * Whether or not there's anything to render in the action bar
    */
   private get isActionBarEnabled() {
-    const extensions = this.getCommitMessageExtensions()
+    const hasExtensions = this.getCommitMessageExtensions().length > 0
+
     return (
       this.isCoAuthorInputEnabled ||
       this.isCopilotButtonEnabled ||
       this.isCommitOptionsButtonEnabled ||
-      extensions.length > 0
+      hasExtensions
     )
   }
 
@@ -1291,9 +1293,18 @@ export class CommitMessage extends React.Component<
 
   private renderExtensionButtons() {
     const extensions = this.getCommitMessageExtensions()
-
     return extensions.map((extension, index) => {
       const needsSeparator = index > 0
+
+      if (extension.id === 'gitmoji') {
+        return (
+          <React.Fragment key={extension.id}>
+            {needsSeparator && <div className="separator" />}
+            {this.renderEmojiButton()}
+          </React.Fragment>
+        )
+      }
+
       if (extension.id === 'itdpm.tasks') {
         return (
           <React.Fragment key={extension.id}>
@@ -1844,7 +1855,6 @@ export class CommitMessage extends React.Component<
       >
         <div className={summaryClassName} ref={this.summaryGroupRef}>
           {this.renderAvatar()}
-          {this.renderEmojiButton()}
           <AutocompletingInput
             required={true}
             label={this.props.showInputLabels === true ? 'Summary' : undefined}

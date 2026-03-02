@@ -8,6 +8,7 @@ export interface IExtensionListItem {
   readonly id: string
   readonly name: string
   readonly enabled: boolean
+  readonly canEdit: boolean
 }
 
 interface IExtensionsProps {
@@ -41,9 +42,7 @@ export class Extensions extends React.Component<IExtensionsProps> {
                   this.props.onToggle(extension.id, event.currentTarget.checked)
                 }
               />
-              <Button onClick={() => this.props.onEdit(extension.id)}>
-                Edit
-              </Button>
+              {this.renderEditButton(extension)}
               <Button onClick={() => this.props.onRemove(extension.id)}>
                 Remove
               </Button>
@@ -53,6 +52,14 @@ export class Extensions extends React.Component<IExtensionsProps> {
         {this.renderEditor()}
       </DialogContent>
     )
+  }
+
+  private renderEditButton(extension: IExtensionListItem) {
+    if (!extension.canEdit) {
+      return null
+    }
+
+    return <Button onClick={() => this.props.onEdit(extension.id)}>Edit</Button>
   }
 
   private renderEditor() {

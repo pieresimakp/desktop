@@ -9,7 +9,12 @@ describe('Extensions preferences tab', () => {
     const html = renderToStaticMarkup(
       <Extensions
         extensions={[
-          { id: 'itdpm.tasks', name: 'ITDPM My Tasks', enabled: true },
+          {
+            id: 'itdpm.tasks',
+            name: 'ITDPM My Tasks',
+            enabled: true,
+            canEdit: true,
+          },
         ]}
         onToggle={() => undefined}
         onEdit={() => undefined}

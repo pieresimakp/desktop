@@ -9,6 +9,7 @@ export interface IExtensionListItem {
   readonly id: string
   readonly name: string
   readonly enabled: boolean
+  readonly canEdit: boolean
 }
 
 export const buildExtensionsList = (
@@ -19,6 +20,7 @@ export const buildExtensionsList = (
     id: extension.id,
     name: extension.name,
     enabled: extension.enabled,
+    canEdit: Object.keys(extension.defaultConfig).length > 0,
   }))
 
 export const getEnabledExtensionsForSlot = (
