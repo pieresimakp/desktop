@@ -4,4 +4,4 @@ export interface IExtensionConfig {
   readonly config: Record<string, string>
 }
 
-export type ExtensionSlot = 'commit-message-action'
+export type ExtensionSlot = 'commit-message-action' | 'toolbar-action'

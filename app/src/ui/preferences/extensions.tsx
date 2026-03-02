@@ -18,12 +18,24 @@ interface IExtensionsProps {
     readonly endpoint: string
     readonly cookie: string
   }
+  readonly trelloConfig?: {
+    readonly apiKey: string
+    readonly token: string
+    readonly boardId: string
+    readonly listId: string
+  }
   readonly onToggle: (id: string, enabled: boolean) => void
   readonly onEdit: (id: string) => void
   readonly onRemove: (id: string) => void
   readonly onItdpmConfigChange?: (updates: {
     readonly endpoint?: string
     readonly cookie?: string
+  }) => void
+  readonly onTrelloConfigChange?: (updates: {
+    readonly apiKey?: string
+    readonly token?: string
+    readonly boardId?: string
+    readonly listId?: string
   }) => void
 }
 
@@ -63,35 +75,80 @@ export class Extensions extends React.Component<IExtensionsProps> {
   }
 
   private renderEditor() {
-    if (this.props.selectedExtensionId !== 'itdpm.tasks') {
-      return null
+    if (this.props.selectedExtensionId === 'itdpm.tasks') {
+      const config = this.props.itdpmConfig
+      if (!config) {
+        return null
+      }
+
+      return (
+        <div className="extensions-editor">
+          <h3>ITDPM My Tasks</h3>
+          <TextBox
+            label="Endpoint"
+            value={config.endpoint}
+            onValueChanged={value =>
+              this.props.onItdpmConfigChange?.({ endpoint: value })
+            }
+            placeholder="https://example.com"
+          />
+          <TextBox
+            label="Cookie"
+            value={config.cookie}
+            onValueChanged={value =>
+              this.props.onItdpmConfigChange?.({ cookie: value })
+            }
+            placeholder="session=..."
+          />
+        </div>
+      )
     }
 
-    const config = this.props.itdpmConfig
-    if (!config) {
-      return null
+    if (this.props.selectedExtensionId === 'trello.panel') {
+      const config = this.props.trelloConfig
+      if (!config) {
+        return null
+      }
+
+      return (
+        <div className="extensions-editor">
+          <h3>Trello Toolbar Action</h3>
+          <TextBox
+            label="API Key"
+            value={config.apiKey}
+            onValueChanged={value =>
+              this.props.onTrelloConfigChange?.({ apiKey: value })
+            }
+            placeholder="trello-api-key"
+          />
+          <TextBox
+            label="Token"
+            value={config.token}
+            onValueChanged={value =>
+              this.props.onTrelloConfigChange?.({ token: value })
+            }
+            placeholder="trello-token"
+          />
+          <TextBox
+            label="Default Board ID"
+            value={config.boardId}
+            onValueChanged={value =>
+              this.props.onTrelloConfigChange?.({ boardId: value })
+            }
+            placeholder="Optional board id"
+          />
+          <TextBox
+            label="Default List ID"
+            value={config.listId}
+            onValueChanged={value =>
+              this.props.onTrelloConfigChange?.({ listId: value })
+            }
+            placeholder="Optional list id"
+          />
+        </div>
+      )
     }
 
-    return (
-      <div className="extensions-editor">
-        <h3>ITDPM My Tasks</h3>
-        <TextBox
-          label="Endpoint"
-          value={config.endpoint}
-          onValueChanged={value =>
-            this.props.onItdpmConfigChange?.({ endpoint: value })
-          }
-          placeholder="https://example.com"
-        />
-        <TextBox
-          label="Cookie"
-          value={config.cookie}
-          onValueChanged={value =>
-            this.props.onItdpmConfigChange?.({ cookie: value })
-          }
-          placeholder="session=..."
-        />
-      </div>
-    )
+    return null
   }
 }

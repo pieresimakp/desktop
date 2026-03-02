@@ -39,6 +39,12 @@ import { installSameOriginFilter } from './same-origin-filter'
 import * as ipcMain from './ipc-main'
 import { fetchItdpmTasks } from './itdpm'
 import {
+  createTrelloCard,
+  fetchTrelloBoards,
+  fetchTrelloCards,
+  fetchTrelloLists,
+} from './trello'
+import {
   getArchitecture,
   isAppRunningUnderARM64Translation,
 } from '../lib/get-architecture'
@@ -726,6 +732,43 @@ app.on('ready', () => {
 
   ipcMain.handle('fetch-itdpm-tasks', async (_, endpoint, cookie) =>
     fetchItdpmTasks(endpoint, cookie)
+  )
+
+  ipcMain.handle('fetch-trello-boards', async (_, apiKey, token) =>
+    fetchTrelloBoards(apiKey, token)
+  )
+
+  ipcMain.handle('fetch-trello-lists', async (_, apiKey, token, boardId) =>
+    fetchTrelloLists(apiKey, token, boardId)
+  )
+
+  ipcMain.handle('fetch-trello-cards', async (_, apiKey, token, listId) =>
+    fetchTrelloCards(apiKey, token, listId)
+  )
+
+  ipcMain.handle(
+    'create-trello-card',
+    async (
+      _,
+      apiKey,
+      token,
+      boardId,
+      listId,
+      name,
+      description,
+      issueType,
+      priority
+    ) =>
+      createTrelloCard(
+        apiKey,
+        token,
+        boardId,
+        listId,
+        name,
+        description,
+        issueType,
+        priority
+      )
   )
 })
 
