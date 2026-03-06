@@ -33,7 +33,27 @@ interface IItdpmTasksExtensionState {
   readonly isOpen: boolean
   readonly isLoading: boolean
   readonly error: string | null
+  readonly searchQuery: string
   readonly tasks: ReadonlyArray<IMyTaskItem>
+}
+
+export function filterMyTasks(
+  tasks: ReadonlyArray<IMyTaskItem>,
+  query: string
+): ReadonlyArray<IMyTaskItem> {
+  const normalizedQuery = query.trim().toLowerCase()
+  if (normalizedQuery.length === 0) {
+    return tasks
+  }
+
+  return tasks.filter(task => {
+    const { id, status, description } = task
+    return (
+      id.toLowerCase().includes(normalizedQuery) ||
+      status.toLowerCase().includes(normalizedQuery) ||
+      description.toLowerCase().includes(normalizedQuery)
+    )
+  })
 }
 
 export class ItdpmTasksExtensionButton extends React.Component<
@@ -49,6 +69,7 @@ export class ItdpmTasksExtensionButton extends React.Component<
       isOpen: false,
       isLoading: false,
       error: null,
+      searchQuery: '',
       tasks: [],
     }
   }
@@ -109,6 +130,14 @@ export class ItdpmTasksExtensionButton extends React.Component<
       >
         <div className="my-task-popover">
           <h3 id="my-task-popover-header">My tasks</h3>
+          <input
+            className="my-task-search"
+            type="search"
+            value={this.state.searchQuery}
+            placeholder="Search by ID, status, or description"
+            onChange={this.onSearchQueryChanged}
+            aria-label="Search tasks"
+          />
           <div className="my-task-header-row">
             <div className="my-task-id">Task ID</div>
             <div className="my-task-status">Status</div>
@@ -130,11 +159,16 @@ export class ItdpmTasksExtensionButton extends React.Component<
       return <div className="my-task-status">{this.state.error}</div>
     }
 
-    if (this.state.tasks.length === 0) {
+    const filteredTasks = filterMyTasks(
+      this.state.tasks,
+      this.state.searchQuery
+    )
+
+    if (filteredTasks.length === 0) {
       return <div className="my-task-status">No tasks found.</div>
     }
 
-    return this.state.tasks.map(task => (
+    return filteredTasks.map(task => (
       <div
         className={classNames('my-task-row')}
         role="button"
@@ -209,6 +243,12 @@ export class ItdpmTasksExtensionButton extends React.Component<
   private onTaskSelected = (taskId: string) => {
     this.setState({ isOpen: false })
     this.props.onApplyTaskId(taskId)
+  }
+
+  private onSearchQueryChanged = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    this.setState({ searchQuery: event.currentTarget.value })
   }
 
   private onTaskKeyDown = (

@@ -29,4 +29,13 @@ describe('commit-message UI', () => {
       /id:\s*'gitmoji'[\s\S]*slot:\s*'commit-message-action'[\s\S]*defaultEnabled:\s*true/
     )
   })
+
+  it('does not redirect focus when clicking in popovers', async () => {
+    const source = await readFile(
+      new URL('../../src/ui/changes/commit-message.tsx', import.meta.url),
+      'utf8'
+    )
+
+    assert.match(source, /closest\('\.popover-component'\)\s*!==\s*null/)
+  })
 })

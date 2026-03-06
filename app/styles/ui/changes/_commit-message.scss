@@ -150,6 +150,25 @@
       font-size: var(--font-size);
     }
 
+    .my-task-search {
+      width: 100%;
+      margin-bottom: var(--spacing-half);
+      padding: 6px 8px;
+      border: var(--base-border);
+      border-radius: var(--border-radius);
+      background: var(--box-background-color);
+      color: var(--text-color);
+
+      &::placeholder {
+        color: var(--text-secondary-color);
+      }
+
+      &:focus {
+        outline: 2px solid var(--focus-color);
+        outline-offset: 0;
+      }
+    }
+
     .my-task-header-row {
       display: grid;
       grid-template-columns: 110px 120px 1fr 18px;

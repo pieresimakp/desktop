@@ -1166,6 +1166,13 @@ export class CommitMessage extends React.Component<
       return
     }
 
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('.popover-component') !== null
+    ) {
+      return
+    }
+
     if (this.descriptionComponent) {
       this.descriptionComponent.focus()
     }
