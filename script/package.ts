@@ -12,11 +12,11 @@ import {
   getWindowsInstallerName,
   shouldMakeDelta,
   getUpdatesURL,
+  getIconFileName,
   isPublishable,
   getBundleSizes,
   getDistRoot,
   getDistArchitecture,
-  getIconDirectory,
 } from './dist-info'
 import { isGitHubActions } from './build-platforms'
 import { existsSync, rmSync, writeFileSync } from 'fs'
@@ -61,7 +61,14 @@ function packageOSX() {
 }
 
 function packageWindows() {
-  const iconSource = join(getIconDirectory(), 'icon-logo.ico')
+  const iconSource = path.join(
+    __dirname,
+    '..',
+    'app',
+    'static',
+    'logos',
+    `${getIconFileName()}.ico`
+  )
 
   if (!existsSync(iconSource)) {
     console.error(`expected setup icon not found at location: ${iconSource}`)

@@ -13,5 +13,3 @@ app/static/common
 app/test/fixtures
 gemoji
 *.md
-app/static/logos/prod/**/*.json
-app/static/logos/dev/**/*.json
