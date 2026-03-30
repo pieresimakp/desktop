@@ -15,7 +15,6 @@ export type MenuIDs =
   | 'open-in-shell'
   | 'push'
   | 'pull'
-  | 'fetch'
   | 'branch'
   | 'repository'
   | 'go-to-commit-message'
