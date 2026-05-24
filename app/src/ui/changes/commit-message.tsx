@@ -1228,24 +1228,6 @@ export class CommitMessage extends React.Component<
     )
   }
 
-  private get isCommitOptionsButtonEnabled() {
-    return enableHooksEnvironment() && this.props.hasCommitHooks
-  }
-
-  /**
-   * Whether or not there's anything to render in the action bar
-   */
-  private get isActionBarEnabled() {
-    const hasExtensions = this.getCommitMessageExtensions().length > 0
-
-    return (
-      this.isCoAuthorInputEnabled ||
-      this.isCopilotButtonEnabled ||
-      this.isCommitOptionsButtonEnabled ||
-      hasExtensions
-    )
-  }
-
   private renderActionBar() {
     const { isCommitting, isGeneratingCommitMessage } = this.props
 

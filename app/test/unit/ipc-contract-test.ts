@@ -98,6 +98,11 @@ describe('IPC channel contract', () => {
     'show-notification',
     'get-notifications-permission',
     'request-notifications-permission',
+    'fetch-itdpm-tasks',
+    'fetch-trello-boards',
+    'fetch-trello-lists',
+    'fetch-trello-cards',
+    'create-trello-card'
   ] as const
 
   describe('RequestChannels', () => {
