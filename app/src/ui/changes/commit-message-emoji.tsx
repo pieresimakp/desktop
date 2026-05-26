@@ -149,6 +149,11 @@ export class CommitMessageEmoji extends React.Component<
         description: '[REFACTOR] - Code refactoring',
       },
       {
+        emoji: '🎨',
+        code: ':art:',
+        description: '[CHORE] - Chore',
+      },
+      {
         emoji: '🔧',
         code: ':wrench:',
         description: '[CONFIG] - Configuration changes',
