@@ -43,7 +43,6 @@ import { Repository } from '../../models/repository'
 import { Notifications } from './notifications'
 import { Accessibility } from './accessibility'
 import { Extensions } from './extensions'
-import type { ModelInfo } from '@github/copilot-sdk'
 import { CopilotPreferences } from './copilot'
 import type {
   CopilotFeature,
